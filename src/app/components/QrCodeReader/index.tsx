@@ -9,7 +9,8 @@ export const QrCodeReader = () => {
       <QrReader
         onResult={(result, error) => {
           if (!!result) {
-            setData(result?.text);
+            // @ts-ignore
+            setData(result?.text as string);
           }
 
           if (!!error) {
