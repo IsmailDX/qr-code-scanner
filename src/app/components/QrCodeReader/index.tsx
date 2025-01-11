@@ -24,7 +24,7 @@ export const QrCodeReader = ({
           }
         }}
         constraints={{ facingMode: "environment" }}
-        className="w-full max-w-[400px]"
+        className="w-full max-w-[400px] z-20"
       />
       {/* <p>{data}</p> */}
     </>
