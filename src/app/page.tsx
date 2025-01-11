@@ -6,11 +6,18 @@ import { db } from "./config/firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import Image from "next/image";
 import Head from "next/head";
+import * as XLSX from "xlsx"; // Import xlsx for working with Excel files
 
 export default function Home() {
   const [scannedData, setScannedData] = useState(""); // Scanned data
+  const [visitorName, setVisitorName] = useState(""); // Visitor's name
+  const [visitorCompany, setVisitorCompany] = useState(""); // Visitor's company name
   const [userExists, setUserExists] = useState<boolean | null>(null); // Track if user exists
   const [isLoading, setIsLoading] = useState(false); // Loading state
+  const [scannedVisitors, setScannedVisitors] = useState<any[]>([]); // Store all scanned visitors
+  const [showPasswordModal, setShowPasswordModal] = useState(false); // To show the password modal
+  const [password, setPassword] = useState(""); // Password input state
+  const [isPasswordCorrect, setIsPasswordCorrect] = useState(false); // To check if the password is correct
 
   const checkUserInDatabase = async (email: string) => {
     setIsLoading(true); // Start loading
@@ -35,10 +42,63 @@ export default function Home() {
   // Process scanned data
   useEffect(() => {
     if (scannedData) {
-      const email = scannedData.split(",")[0]?.trim(); // Extract email from scanned data
+      const [email, name, visitorType, companyName] = scannedData
+        .split(",")
+        .map((item) => item.trim()); // Extract email, name, visitor type, and company
+      setVisitorName(name); // Set visitor name
+      setVisitorCompany(companyName); // Set visitor company
+
+      // Check if visitor already exists in the scannedVisitors array by email
+      setScannedVisitors((prev) => {
+        // If the email doesn't exist in the array, add the new visitor
+        if (!prev.some((visitor) => visitor.email === email)) {
+          return [...prev, { email, name, company: companyName, visitorType }]; // Add new scanned visitor to the list
+        }
+        return prev; // Return the existing list without duplicates
+      });
+
       checkUserInDatabase(email);
     }
   }, [scannedData]);
+
+  // Function to handle Excel file export
+  const exportToExcel = () => {
+    // Remove duplicates based on email
+    const uniqueVisitors = Array.from(
+      new Map(
+        scannedVisitors.map((visitor) => [visitor.email, visitor])
+      ).values()
+    );
+
+    const data = [
+      ["Email", "Name", "Company"], // Column headers
+      ...uniqueVisitors.map((visitor) => [
+        visitor.email,
+        visitor.name,
+        visitor.company,
+      ]), // All scanned visitors data
+    ];
+
+    // Create a new workbook and add the data
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Visitors");
+
+    // Export the Excel file
+    XLSX.writeFile(wb, "Scanned_Visitors.xlsx");
+  };
+
+  // Function to handle password validation
+  const handlePasswordSubmit = () => {
+    const correctPassword = "Aldrich@2796"; // Predefined correct password
+    if (password === correctPassword) {
+      setIsPasswordCorrect(true);
+      setShowPasswordModal(false);
+      exportToExcel();
+    } else {
+      alert("Incorrect password!");
+    }
+  };
 
   return (
     <main className="w-screen flex min-h-screen flex-col items-center p-6 bg-gray-100 relative">
@@ -61,22 +121,22 @@ export default function Home() {
       <Image
         src="/mecoc-logo.png"
         alt="logo"
-        width={300}
-        height={300}
+        width={200}
+        height={200}
         objectFit="contain"
         priority
         className="z-20"
       />
-      <p className="text-white mt-4 z-10">
+      <p className="text-white mt-4 z-10 text-center">
         Scan a visitor's barcode to verify their access.
       </p>
 
       <QrCodeReader onScan={(data: string) => setScannedData(data)} />
 
-      {scannedData && (
-        <div className="mt-4 p-4 bg-white shadow-lg rounded text-center max-w-md w-full z-20">
-          <h2 className="text-lg font-semibold text-gray-800">Scanned Data</h2>
-          <p className="text-gray-700">{scannedData}</p>
+      {visitorName && (
+        <div className="mt-4 px-4 py-2 bg-white shadow-lg rounded text-center max-w-md w-full z-20">
+          <h2 className="text-lg font-semibold text-gray-800">Welcome</h2>
+          <p className="text-gray-700 text-lg">Hello {visitorName}!</p>
         </div>
       )}
 
@@ -104,6 +164,43 @@ export default function Home() {
             )}
           </div>
         )
+      )}
+
+      <button
+        onClick={() => setShowPasswordModal(true)} // Show the password modal
+        className="mt-6 px-4 py-2 bg-[#aa532c] text-white rounded shadow-lg z-20"
+      >
+        People Scanned
+      </button>
+
+      {/* Password Modal */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-30">
+          <div className="bg-white p-6 rounded-lg max-w-sm w-full">
+            <h3 className="text-xl mb-4">Enter Password</h3>
+            <input
+              type="password"
+              placeholder="Password"
+              className="border p-2 w-full mb-4"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <div className="flex justify-between">
+              <button
+                onClick={handlePasswordSubmit}
+                className="bg-green-500 text-white px-4 py-2 rounded"
+              >
+                Submit
+              </button>
+              <button
+                onClick={() => setShowPasswordModal(false)}
+                className="bg-red-500 text-white px-4 py-2 rounded"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </main>
   );
