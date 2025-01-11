@@ -2,23 +2,29 @@
 import { useState } from "react";
 import { QrReader } from "react-qr-reader";
 
-export const QrCodeReader = () => {
+export const QrCodeReader = ({
+  onScan,
+}: {
+  onScan: (data: string) => void;
+}) => {
   const [data, setData] = useState("No result");
+
   return (
     <>
       <QrReader
         onResult={(result, error) => {
-          if (!!result) {
-            // @ts-ignore
-            setData(result?.text as string);
+          if (result) {
+            const scannedText = result.getText();
+            setData(scannedText);
+            onScan(scannedText); // Pass scanned text to parent component
           }
 
-          if (!!error) {
-            console.info(error);
+          if (error) {
+            console.error("QR Reader Error:", error);
           }
         }}
         constraints={{ facingMode: "environment" }}
-        className="w-60"
+        className="w-full max-w-[30vw]"
       />
       <p>{data}</p>
     </>
