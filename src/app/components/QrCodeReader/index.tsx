@@ -17,7 +17,7 @@ export const QrCodeReader = () => {
             console.info(error);
           }
         }}
-        constraints={{ facingMode: "user" }}
+        constraints={{ facingMode: "environment" }}
         className="w-60"
       />
       <p>{data}</p>
