@@ -1,4 +1,4 @@
-// File: /Users/tothsentinela-01/Documents/GitHub/next-qr-scanner/next-QR-scanner/src/app/layout.tsx
+// File: E:\Frontend\Work-Aldrich\next-QR-scanner\src\app\layout.tsx
 import * as entry from '../../../src/app/layout.js'
 import type { ResolvingMetadata } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
