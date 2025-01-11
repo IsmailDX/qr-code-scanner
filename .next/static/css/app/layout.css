@@ -575,6 +575,9 @@ video {
 .max-w-\[30vw\] {
   max-width: 30vw;
 }
+.max-w-\[400px\] {
+  max-width: 400px;
+}
 .flex-col {
   flex-direction: column;
 }
@@ -612,6 +615,10 @@ video {
 .text-red-600 {
   --tw-text-opacity: 1;
   color: rgb(220 38 38 / var(--tw-text-opacity));
+}
+.text-blue-600 {
+  --tw-text-opacity: 1;
+  color: rgb(37 99 235 / var(--tw-text-opacity));
 }
 .shadow {
   --tw-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);

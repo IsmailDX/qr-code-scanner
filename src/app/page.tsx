@@ -8,8 +8,10 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 export default function Home() {
   const [scannedData, setScannedData] = useState(""); // Scanned data
   const [userExists, setUserExists] = useState<boolean | null>(null); // Track if user exists
+  const [isLoading, setIsLoading] = useState(false); // Loading state
 
   const checkUserInDatabase = async (email: string) => {
+    setIsLoading(true); // Start loading
     try {
       const usersCollection = collection(db, "Users");
       const q = query(usersCollection, where("email", "==", email));
@@ -23,6 +25,8 @@ export default function Home() {
       }
     } catch (error) {
       console.error("Error checking user:", error);
+    } finally {
+      setIsLoading(false); // Stop loading
     }
   };
 
@@ -45,14 +49,20 @@ export default function Home() {
         </div>
       )}
 
-      {userExists !== null && (
+      {isLoading ? (
         <div className="mt-4 p-4 bg-white shadow rounded text-center">
-          {userExists ? (
-            <p className="text-green-600">User found in the database!</p>
-          ) : (
-            <p className="text-red-600">User not found in the database.</p>
-          )}
+          <p className="text-blue-600">Checking user in the database...</p>
         </div>
+      ) : (
+        userExists !== null && (
+          <div className="mt-4 p-4 bg-white shadow rounded text-center">
+            {userExists ? (
+              <p className="text-green-600">User found in the database!</p>
+            ) : (
+              <p className="text-red-600">User not found in the database.</p>
+            )}
+          </div>
+        )
       )}
     </main>
   );
