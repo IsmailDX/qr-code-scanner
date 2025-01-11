@@ -48,11 +48,23 @@ export default function Home() {
       setVisitorName(name); // Set visitor name
       setVisitorCompany(companyName); // Set visitor company
 
+      // Get the current date and time
+      const currentDateTime = new Date().toLocaleString();
+
       // Check if visitor already exists in the scannedVisitors array by email
       setScannedVisitors((prev) => {
-        // If the email doesn't exist in the array, add the new visitor
+        // If the email doesn't exist in the array, add the new visitor with date and time
         if (!prev.some((visitor) => visitor.email === email)) {
-          return [...prev, { email, name, company: companyName, visitorType }]; // Add new scanned visitor to the list
+          return [
+            ...prev,
+            {
+              email,
+              name,
+              company: companyName,
+              visitorType,
+              dateTime: currentDateTime, // Add date and time
+            },
+          ]; // Add new scanned visitor to the list
         }
         return prev; // Return the existing list without duplicates
       });
@@ -71,11 +83,12 @@ export default function Home() {
     );
 
     const data = [
-      ["Email", "Name", "Company"], // Column headers
+      ["Email", "Name", "Company", "Date and Time"], // Column headers
       ...uniqueVisitors.map((visitor) => [
         visitor.email,
         visitor.name,
         visitor.company,
+        visitor.dateTime, // Include the date and time
       ]), // All scanned visitors data
     ];
 
