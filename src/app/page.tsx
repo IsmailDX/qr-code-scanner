@@ -98,7 +98,14 @@ export default function Home() {
     XLSX.utils.book_append_sheet(wb, ws, "Visitors");
 
     // Export the Excel file
-    XLSX.writeFile(wb, "Scanned_Visitors.xlsx");
+    const excelFile = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+
+    // Convert the array to a Blob and trigger the download
+    const blob = new Blob([excelFile], { type: "application/octet-stream" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "Scanned_Visitors.xlsx";
+    link.click(); // Trigger download
   };
 
   // Function to handle password validation
