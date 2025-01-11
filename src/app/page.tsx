@@ -1,3 +1,5 @@
+"use client";
+
 import { QrCodeReader } from "./components";
 import { useEffect, useState } from "react";
 import { db } from "./config/firebase";
