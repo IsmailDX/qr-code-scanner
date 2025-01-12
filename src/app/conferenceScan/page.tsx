@@ -15,6 +15,15 @@ export default function Home() {
   const [visitorType, setVisitorType] = useState(""); // Visitor type
   const [userExists, setUserExists] = useState<boolean | null>(null); // Track if user exists
   const [isLoading, setIsLoading] = useState(false); // Loading state
+  const [errorMessage, setErrorMessage] = useState(""); // Error message
+
+  const resetVisitorDetails = () => {
+    setVisitorName("");
+    setVisitorCompany("");
+    setVisitorType("");
+    setUserExists(null);
+    setErrorMessage("");
+  };
 
   const checkUserInDatabase = async (email: string) => {
     setIsLoading(true); // Start loading
@@ -23,7 +32,6 @@ export default function Home() {
       const q = query(usersCollection, where("email", "==", email));
       const querySnapshot = await getDocs(q);
 
-      // Check if any documents were returned
       setUserExists(!querySnapshot.empty);
     } catch (error) {
       console.error("Error checking user in database:", error);
@@ -40,8 +48,6 @@ export default function Home() {
   ) => {
     try {
       const scannedPeopleCollection = collection(db, "ScannedPeople");
-
-      // Query the collection to check for existing records with the same email
       const q = query(scannedPeopleCollection, where("email", "==", email));
       const querySnapshot = await getDocs(q);
 
@@ -63,21 +69,28 @@ export default function Home() {
 
   useEffect(() => {
     if (scannedData) {
-      // Check if "Visitor" or "Media User" exists in the scanned data
+      resetVisitorDetails(); // Reset previous details
       const lowerCaseData = scannedData.toLowerCase();
       const containsRestrictedWords =
         lowerCaseData.includes("visitor") ||
         lowerCaseData.includes("media user");
 
       if (containsRestrictedWords) {
-        setUserExists(false);
-        console.warn("Access not allowed for Visitor or Media User.");
-        return; // Exit early, don't process or save the data
+        setErrorMessage(
+          "Access not allowed. Scanned QR belongs to 'Visitor' or 'Media User'."
+        );
+        return;
       }
 
       const [email, name, type, company] = scannedData
         .split(",")
         .map((item) => item.trim());
+
+      if (!email || !name || !type || !company) {
+        setErrorMessage("Invalid QR code data. Please scan a valid QR code.");
+        return;
+      }
+
       setVisitorName(name);
       setVisitorCompany(company);
       setVisitorType(type);
@@ -121,20 +134,20 @@ export default function Home() {
       {/* QR Code Reader */}
       <QrCodeReader onScan={(data: string) => setScannedData(data)} />
 
+      {/* Error Message */}
+      {errorMessage && (
+        <div className="mt-4 p-4 bg-red-100 shadow-lg rounded text-center max-w-md w-full z-20">
+          <p className="text-red-600 font-medium text-lg">❌ {errorMessage}</p>
+        </div>
+      )}
+
       {/* Visitor Details */}
-      {visitorName &&
-        (visitorType === "Visitor" || visitorType === "Media User" ? (
-          <div className="mt-4 p-4 bg-yellow-100 shadow-lg rounded text-center max-w-md w-full z-20">
-            <p className="text-yellow-600 font-medium text-lg">
-              ⚠️ Access not allowed for Visitor or Media User.
-            </p>
-          </div>
-        ) : (
-          <div className="mt-4 px-4 py-2 bg-white shadow-lg rounded text-center max-w-md w-full z-20">
-            <h2 className="text-lg font-semibold text-gray-800">Welcome</h2>
-            <p className="text-gray-700 text-lg">Hello {visitorName}!</p>
-          </div>
-        ))}
+      {visitorName && !errorMessage && (
+        <div className="mt-4 px-4 py-2 bg-white shadow-lg rounded text-center max-w-md w-full z-20">
+          <h2 className="text-lg font-semibold text-gray-800">Welcome</h2>
+          <p className="text-gray-700 text-lg">Hello {visitorName}!</p>
+        </div>
+      )}
 
       {/* User Status */}
       {isLoading ? (
@@ -145,7 +158,7 @@ export default function Home() {
         </div>
       ) : (
         userExists !== null &&
-        (visitorType === "Visitor" || visitorType === "Media User" ? null : (
+        !errorMessage && (
           <div
             className={`mt-4 p-4 shadow-lg rounded text-center max-w-md w-full z-20 ${
               userExists ? "bg-green-100" : "bg-red-100"
@@ -161,7 +174,7 @@ export default function Home() {
               </p>
             )}
           </div>
-        ))
+        )
       )}
     </main>
   );
