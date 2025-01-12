@@ -126,7 +126,10 @@ export default function Home() {
 
       {/* Home Button */}
       <Link href="/" className="w-full max-w-[400px] z-20">
-        <p className="text-white mt-7 bg-[#186e5a] hover:bg-[#32947d] text-center rounded-full px-4 py-2 w-full transition-all font-semibold">
+        <p
+          className="text-white mt-7 bg-[#186e5a] hover:bg-[#32947d] text-center max-sm:mb-3 border border-white 
+        rounded-full px-4 py-2 w-full transition-all ease-in-out duration-200 cursor-pointer font-semibold z-20 max-w-[400px]"
+        >
           Home
         </p>
       </Link>
@@ -165,11 +168,11 @@ export default function Home() {
             }`}
           >
             {userExists ? (
-              <p className="text-green-600 font-medium text-lg">
+              <p className="text-green-600 font-medium text-base">
                 ✅ User found! Access granted.
               </p>
             ) : (
-              <p className="text-red-600 font-medium text-lg">
+              <p className="text-red-600 font-medium text-base">
                 ❌ User not found! Access denied.
               </p>
             )}
