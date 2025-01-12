@@ -3,10 +3,9 @@
 import { QrCodeReader } from "./components";
 import { useEffect, useState } from "react";
 import { db } from "./config/firebase";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
 import Image from "next/image";
 import Head from "next/head";
-import * as XLSX from "xlsx"; // Import xlsx for working with Excel files
 
 export default function Home() {
   const [scannedData, setScannedData] = useState(""); // Scanned data
@@ -14,10 +13,6 @@ export default function Home() {
   const [visitorCompany, setVisitorCompany] = useState(""); // Visitor's company name
   const [userExists, setUserExists] = useState<boolean | null>(null); // Track if user exists
   const [isLoading, setIsLoading] = useState(false); // Loading state
-  const [scannedVisitors, setScannedVisitors] = useState<any[]>([]); // Store all scanned visitors
-  const [showPasswordModal, setShowPasswordModal] = useState(false); // To show the password modal
-  const [password, setPassword] = useState(""); // Password input state
-  const [isPasswordCorrect, setIsPasswordCorrect] = useState(false); // To check if the password is correct
 
   const checkUserInDatabase = async (email: string) => {
     setIsLoading(true); // Start loading
@@ -39,6 +34,38 @@ export default function Home() {
     }
   };
 
+  const saveVisitorToFirebase = async (
+    email: string,
+    name: string,
+    company: string,
+    dateTime: string
+  ) => {
+    try {
+      const scannedPeopleCollection = collection(db, "ScannedPeople");
+
+      // Query the collection to check for existing records with the same email
+      const q = query(scannedPeopleCollection, where("email", "==", email));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        // If no matching records found, add the new visitor
+        await addDoc(scannedPeopleCollection, {
+          email,
+          name,
+          company,
+          dateAndTime: dateTime, // Save the current date and time
+        });
+        console.log("Visitor saved to Firebase successfully!");
+      } else {
+        console.log(
+          "Duplicate entry detected. Visitor already exists in Firebase."
+        );
+      }
+    } catch (error) {
+      console.error("Error saving visitor to Firebase:", error);
+    }
+  };
+
   // Process scanned data
   useEffect(() => {
     if (scannedData) {
@@ -51,74 +78,13 @@ export default function Home() {
       // Get the current date and time
       const currentDateTime = new Date().toLocaleString();
 
-      // Check if visitor already exists in the scannedVisitors array by email
-      setScannedVisitors((prev) => {
-        // If the email doesn't exist in the array, add the new visitor with date and time
-        if (!prev.some((visitor) => visitor.email === email)) {
-          return [
-            ...prev,
-            {
-              email,
-              name,
-              company: companyName,
-              visitorType,
-              dateTime: currentDateTime, // Add date and time
-            },
-          ]; // Add new scanned visitor to the list
-        }
-        return prev; // Return the existing list without duplicates
-      });
+      // Save the visitor to Firebase
+      saveVisitorToFirebase(email, name, companyName, currentDateTime);
 
+      // Check if the visitor exists in the Users collection
       checkUserInDatabase(email);
     }
   }, [scannedData]);
-
-  // Function to handle Excel file export
-  const exportToExcel = () => {
-    // Remove duplicates based on email
-    const uniqueVisitors = Array.from(
-      new Map(
-        scannedVisitors.map((visitor) => [visitor.email, visitor])
-      ).values()
-    );
-
-    const data = [
-      ["Email", "Name", "Company", "Date and Time"], // Column headers
-      ...uniqueVisitors.map((visitor) => [
-        visitor.email,
-        visitor.name,
-        visitor.company,
-        visitor.dateTime, // Include the date and time
-      ]), // All scanned visitors data
-    ];
-
-    // Create a new workbook and add the data
-    const ws = XLSX.utils.aoa_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Visitors");
-
-    // Export the Excel file
-    const excelFile = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-
-    // Convert the array to a Blob and trigger the download
-    const blob = new Blob([excelFile], { type: "application/octet-stream" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "Scanned_Visitors.xlsx";
-    link.click(); // Trigger download
-  };
-
-  // Function to handle password validation
-  const handlePasswordSubmit = () => {
-    const correctPassword = "Aldrich@2796"; // Predefined correct password
-    if (password === correctPassword) {
-      setIsPasswordCorrect(true);
-      setShowPasswordModal(false);
-      exportToExcel();
-    } else {
-      alert("Incorrect password!");
-    }
-  };
 
   return (
     <main className="w-screen flex min-h-screen flex-col items-center p-6 bg-gray-100 relative">
@@ -147,7 +113,7 @@ export default function Home() {
         priority
         className="z-20"
       />
-      <p className="text-white mt-4 z-10 text-center">
+      <p className="text-white mt-4 z-10 text-center max-sm:mb-3">
         Scan a visitor's barcode to verify their access.
       </p>
 
@@ -184,43 +150,6 @@ export default function Home() {
             )}
           </div>
         )
-      )}
-
-      <button
-        onClick={() => setShowPasswordModal(true)} // Show the password modal
-        className="mt-6 px-4 py-2 bg-[#aa532c] text-white rounded shadow-lg z-20"
-      >
-        People Scanned
-      </button>
-
-      {/* Password Modal */}
-      {showPasswordModal && (
-        <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-30">
-          <div className="bg-white p-6 rounded-lg max-w-sm w-full">
-            <h3 className="text-xl mb-4">Enter Password</h3>
-            <input
-              type="password"
-              placeholder="Password"
-              className="border p-2 w-full mb-4"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <div className="flex justify-between">
-              <button
-                onClick={handlePasswordSubmit}
-                className="bg-green-500 text-white px-4 py-2 rounded"
-              >
-                Submit
-              </button>
-              <button
-                onClick={() => setShowPasswordModal(false)}
-                className="bg-red-500 text-white px-4 py-2 rounded"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
       )}
     </main>
   );
