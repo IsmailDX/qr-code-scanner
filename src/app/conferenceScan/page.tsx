@@ -1,0 +1,168 @@
+"use client";
+
+import { QrCodeReader } from "../components";
+import { useEffect, useState } from "react";
+import { db } from "@/app/config/firebase";
+import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
+import Image from "next/image";
+import Head from "next/head";
+import Link from "next/link";
+
+export default function Home() {
+  const [scannedData, setScannedData] = useState(""); // Scanned data
+  const [visitorName, setVisitorName] = useState(""); // Visitor's name
+  const [visitorCompany, setVisitorCompany] = useState(""); // Visitor's company name
+  const [visitorType, setVisitorType] = useState(""); // Visitor type
+  const [userExists, setUserExists] = useState<boolean | null>(null); // Track if user exists
+  const [isLoading, setIsLoading] = useState(false); // Loading state
+
+  const checkUserInDatabase = async (email: string) => {
+    setIsLoading(true); // Start loading
+    try {
+      const usersCollection = collection(db, "Users");
+      const q = query(usersCollection, where("email", "==", email));
+      const querySnapshot = await getDocs(q);
+
+      // Check if any documents were returned
+      setUserExists(!querySnapshot.empty);
+    } catch (error) {
+      console.error("Error checking user in database:", error);
+    } finally {
+      setIsLoading(false); // Stop loading
+    }
+  };
+
+  const saveVisitorToFirebase = async (
+    email: string,
+    name: string,
+    company: string,
+    dateTime: string
+  ) => {
+    try {
+      const scannedPeopleCollection = collection(db, "ScannedPeople");
+
+      // Query the collection to check for existing records with the same email
+      const q = query(scannedPeopleCollection, where("email", "==", email));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        await addDoc(scannedPeopleCollection, {
+          email,
+          name,
+          company,
+          dateAndTime: dateTime,
+        });
+        console.log("Visitor saved successfully!");
+      } else {
+        console.log("Duplicate entry: Visitor already exists.");
+      }
+    } catch (error) {
+      console.error("Error saving visitor to Firebase:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (scannedData) {
+      // Check if "Visitor" or "Media User" exists in the scanned data
+      const lowerCaseData = scannedData.toLowerCase();
+      const containsRestrictedWords =
+        lowerCaseData.includes("visitor") ||
+        lowerCaseData.includes("media user");
+
+      if (containsRestrictedWords) {
+        setUserExists(false);
+        console.warn("Access not allowed for Visitor or Media User.");
+        return; // Exit early, don't process or save the data
+      }
+
+      const [email, name, type, company] = scannedData
+        .split(",")
+        .map((item) => item.trim());
+      setVisitorName(name);
+      setVisitorCompany(company);
+      setVisitorType(type);
+
+      const currentDateTime = new Date().toLocaleString();
+      saveVisitorToFirebase(email, name, company, currentDateTime);
+      checkUserInDatabase(email);
+    }
+  }, [scannedData]);
+
+  return (
+    <main className="w-screen flex min-h-screen flex-col items-center p-6 bg-gray-100 relative">
+      <Head>
+        <title>Conference Hall QR Scan</title>
+      </Head>
+
+      {/* Overlay and Background */}
+      <div className="absolute inset-0 bg-black/60 z-10" />
+      <div className="absolute inset-0 z-0 blur-sm">
+        <Image src="/bg.jpg" alt="Background" fill objectFit="cover" priority />
+      </div>
+
+      {/* Logo */}
+      <Image
+        src="/mecoc-logo.png"
+        alt="logo"
+        width={200}
+        height={200}
+        objectFit="contain"
+        priority
+        className="z-20"
+      />
+
+      {/* Home Button */}
+      <Link href="/" className="w-full max-w-[400px] z-20">
+        <p className="text-white mt-7 bg-[#186e5a] hover:bg-[#32947d] text-center rounded-full px-4 py-2 w-full transition-all font-semibold">
+          Home
+        </p>
+      </Link>
+
+      {/* QR Code Reader */}
+      <QrCodeReader onScan={(data: string) => setScannedData(data)} />
+
+      {/* Visitor Details */}
+      {visitorName &&
+        (visitorType === "Visitor" || visitorType === "Media User" ? (
+          <div className="mt-4 p-4 bg-yellow-100 shadow-lg rounded text-center max-w-md w-full z-20">
+            <p className="text-yellow-600 font-medium text-lg">
+              ⚠️ Access not allowed for Visitor or Media User.
+            </p>
+          </div>
+        ) : (
+          <div className="mt-4 px-4 py-2 bg-white shadow-lg rounded text-center max-w-md w-full z-20">
+            <h2 className="text-lg font-semibold text-gray-800">Welcome</h2>
+            <p className="text-gray-700 text-lg">Hello {visitorName}!</p>
+          </div>
+        ))}
+
+      {/* User Status */}
+      {isLoading ? (
+        <div className="mt-4 p-4 bg-blue-100 shadow-lg rounded text-center max-w-md w-full z-20">
+          <p className="text-blue-600 font-medium">
+            Verifying user, please wait...
+          </p>
+        </div>
+      ) : (
+        userExists !== null &&
+        (visitorType === "Visitor" || visitorType === "Media User" ? null : (
+          <div
+            className={`mt-4 p-4 shadow-lg rounded text-center max-w-md w-full z-20 ${
+              userExists ? "bg-green-100" : "bg-red-100"
+            }`}
+          >
+            {userExists ? (
+              <p className="text-green-600 font-medium text-lg">
+                ✅ User found! Access granted.
+              </p>
+            ) : (
+              <p className="text-red-600 font-medium text-lg">
+                ❌ User not found! Access denied.
+              </p>
+            )}
+          </div>
+        ))
+      )}
+    </main>
+  );
+}
