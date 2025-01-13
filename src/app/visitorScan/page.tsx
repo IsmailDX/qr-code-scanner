@@ -148,11 +148,16 @@ export default function Home() {
             {userExists ? (
               <p className="text-green-600 font-medium text-base z-20">
                 ✅ User found! Access granted.
+                <div className="h-[1px] w-full bg-black my-3"/>
+                <p className="text-gray-700">Data:  {scannedData}!</p>
               </p>
             ) : (
               <p className="text-red-600 font-medium text-base z-20">
                 ❌ User not found! Access denied.
+                <div className="h-[1px] w-full bg-black my-3"/>
+                <p className="text-gray-700">Data:  {scannedData}!</p>
               </p>
+              
             )}
           </div>
         )

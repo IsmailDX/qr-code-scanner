@@ -141,6 +141,8 @@ export default function Home() {
       {errorMessage && (
         <div className="mt-4 p-4 bg-red-100 shadow-lg rounded text-center max-w-md w-full z-20">
           <p className="text-red-600 font-medium text-lg">❌ {errorMessage}</p>
+          <div className="h-[1px] w-full bg-black my-3"/>
+          <p className="text-gray-700">Data:  {scannedData}!</p>
         </div>
       )}
 
@@ -170,10 +172,14 @@ export default function Home() {
             {userExists ? (
               <p className="text-green-600 font-medium text-base">
                 ✅ User found! Access granted.
+                <div className="h-[1px] w-full bg-black my-3"/>
+                <p className="text-gray-700">Data:  {scannedData}!</p>
               </p>
             ) : (
               <p className="text-red-600 font-medium text-base">
                 ❌ User not found! Access denied.
+                <div className="h-[1px] w-full bg-black my-3"/>
+                <p className="text-gray-700">Data:  {scannedData}!</p>
               </p>
             )}
           </div>

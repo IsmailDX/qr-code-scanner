@@ -1,4 +1,4 @@
-// File: E:\Frontend\Work-Aldrich\next-QR-scanner\src\app\conferenceScan\page.tsx
+// File: C:\Users\Ismail\Desktop\Education\Work\qr-code-scanner\src\app\conferenceScan\page.tsx
 import * as entry from '../../../../src/app/conferenceScan/page.js'
 import type { ResolvingMetadata } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
