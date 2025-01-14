@@ -1,5 +1,8 @@
 {
   "/page": "app/page.js",
+  "/future-steel/page": "app/future-steel/page.js",
+  "/corrosion-and-coatings/page": "app/corrosion-and-coatings/page.js",
+  "/visitorScan/page": "app/visitorScan/page.js",
   "/conferenceScan/page": "app/conferenceScan/page.js",
-  "/visitorScan/page": "app/visitorScan/page.js"
+  "/non-metallic/page": "app/non-metallic/page.js"
 }
