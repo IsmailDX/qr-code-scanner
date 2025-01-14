@@ -48,6 +48,14 @@ export default function Home() {
             Conference Hall Scanner
           </p>
         </Link>
+        <Link href="/export-data">
+        <p
+            className="text-white mt-4 bg-[#186e5a] hover:bg-[#32947d] text-center max-sm:mb-3 border border-white 
+        rounded-full px-4 py-2 w-full transition-all ease-in-out duration-200 cursor-pointer font-semibold"
+          >
+            Export Data
+          </p>
+        </Link>
       </div>
     </main>
   );

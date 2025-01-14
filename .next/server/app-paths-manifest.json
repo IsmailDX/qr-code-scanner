@@ -1,5 +1,4 @@
 {
   "/page": "app/page.js",
-  "/lunch-area/page": "app/lunch-area/page.js",
-  "/conferenceScan/page": "app/conferenceScan/page.js"
+  "/export-data/page": "app/export-data/page.js"
 }
