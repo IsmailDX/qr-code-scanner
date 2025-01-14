@@ -24,22 +24,24 @@ export default function Export() {
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet(title);
 
-      // Add header row
-      worksheet.addRow(["Company", "Date and Time", "Email", "Name"]);
+      // Add header row, including 'Designation'
+      worksheet.addRow(["Company", "Date and Time", "Email", "Name", "Designation"]);
 
       // Add rows from Firestore data
       querySnapshot.forEach((doc) => {
         const data = doc.data();
-        
+
         worksheet.addRow([
-             //@ts-ignore
+          //@ts-ignore
           data.company,
-           //@ts-ignore
+          //@ts-ignore
           data.dateAndTime,
-           //@ts-ignore
+          //@ts-ignore
           data.email,
-           //@ts-ignore
+          //@ts-ignore
           data.name,
+          //@ts-ignore
+          data.designation, // Include designation here
         ]);
       });
 

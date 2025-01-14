@@ -39,6 +39,7 @@ export default function Home() {
     email: string,
     name: string,
     company: string,
+    designation: string,
     dateTime: string
   ) => {
     try {
@@ -54,6 +55,7 @@ export default function Home() {
           email,
           name,
           company,
+          designation,
           dateAndTime: dateTime, // Save the current date and time
         });
         console.log("Visitor saved to Firebase successfully!");
@@ -70,17 +72,21 @@ export default function Home() {
   // Process scanned data
   useEffect(() => {
     if (scannedData) {
-      const [email, name, visitorType, companyName] = scannedData
-        .split(",")
-        .map((item) => item.trim()); // Extract email, name, visitor type, and company
+      // Extract email, name, company, and designation
+      const dataParts = scannedData.split(",").map((item) => item.trim());
+      const email = dataParts[0];
+      const name = dataParts[1];
+      const company = dataParts[2];
+      const designation = dataParts[dataParts.length - 1]; // Get the last part for designation
+
       setVisitorName(name); // Set visitor name
-      setVisitorCompany(companyName); // Set visitor company
+      setVisitorCompany(company); // Set visitor company
 
       // Get the current date and time
       const currentDateTime = new Date().toLocaleString();
 
       // Save the visitor to Firebase
-      saveVisitorToFirebase(email, name, companyName, currentDateTime);
+      saveVisitorToFirebase(email, name, company, designation, currentDateTime);
 
       // Check if the visitor exists in the Users collection
       checkUserInDatabase(email);

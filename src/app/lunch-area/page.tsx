@@ -44,6 +44,7 @@ export default function Home() {
     email: string,
     name: string,
     company: string,
+    designation: string,
     dateTime: string
   ) => {
     try {
@@ -56,6 +57,7 @@ export default function Home() {
           email,
           name,
           company,
+          designation,
           dateAndTime: dateTime,
         });
         console.log("Visitor saved successfully!");
@@ -76,17 +78,16 @@ export default function Home() {
       const containsRestrictedWords = lowerCaseData.includes("visitor");
   
       if (containsRestrictedWords) {
-        setErrorMessage(
-          "Access not allowed. Scanned QR belongs to 'Visitor'."
-        );
+        setErrorMessage("Access not allowed. Scanned QR belongs to 'Visitor'.");
         return;
       }
   
-      const [email, name, company, type, role] = scannedData
+      // Include designation in destructured fields
+      const [email, name, company, type, designation] = scannedData
         .split(",")
         .map((item) => item.trim());
   
-      if (!email || !name || !type || !company || !role) {
+      if (!email || !name || !type || !company || !designation) {
         setErrorMessage("Invalid QR code data. Please scan a valid QR code.");
         return;
       }
@@ -101,10 +102,14 @@ export default function Home() {
       setVisitorType(type);
   
       const currentDateTime = new Date().toLocaleString();
-      saveVisitorToFirebase(email, name, company, currentDateTime);
+  
+      // Save visitor data including designation
+      saveVisitorToFirebase(email, name, company, designation, currentDateTime);
+  
       checkUserInDatabase(email);
     }
   }, [scannedData]);
+  
   
 
   return (

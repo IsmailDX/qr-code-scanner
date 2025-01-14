@@ -44,6 +44,7 @@ export default function Home() {
     email: string,
     name: string,
     company: string,
+    designation: string,
     dateTime: string
   ) => {
     try {
@@ -56,6 +57,7 @@ export default function Home() {
           email,
           name,
           company,
+          designation,
           dateAndTime: dateTime,
         });
         console.log("Visitor saved successfully!");
@@ -74,37 +76,44 @@ export default function Home() {
       const containsRestrictedWords =
         lowerCaseData.includes("visitor") ||
         lowerCaseData.includes("media user");
-
+  
       if (containsRestrictedWords) {
         setErrorMessage(
           "Access not allowed. Scanned QR belongs to 'Visitor' or 'Media User'."
         );
         return;
       }
-
-      const [email, name, company, type, role] = scannedData
+  
+      // Destructure scanned data to include designation (role)
+      const [email, name, company, type, designation] = scannedData
         .split(",")
         .map((item) => item.trim());
-
-      if (!email || !name || !type || !company || !role) {
+  
+      if (!email || !name || !type || !company || !designation) {
         setErrorMessage("Invalid QR code data. Please scan a valid QR code.");
         return;
       }
-
+  
       if (type.toLowerCase() === "visitor" || type.toLowerCase() === "media user") {
-        setErrorMessage("Access not allowed. Scanned QR belongs to 'Visitor' or 'Media User'.");
+        setErrorMessage(
+          "Access not allowed. Scanned QR belongs to 'Visitor' or 'Media User'."
+        );
         return;
       }
-
+  
       setVisitorName(name);
       setVisitorCompany(company);
       setVisitorType(type);
-
+  
       const currentDateTime = new Date().toLocaleString();
-      saveVisitorToFirebase(email, name, company, currentDateTime);
+  
+      // Save visitor data including designation
+      saveVisitorToFirebase(email, name, company, designation, currentDateTime);
+  
       checkUserInDatabase(email);
     }
   }, [scannedData]);
+  
 
   return (
     <main className="w-screen flex min-h-screen flex-col items-center p-6 bg-gray-100 relative">
