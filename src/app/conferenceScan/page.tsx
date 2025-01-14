@@ -58,6 +58,14 @@ export default function Home() {
            Corrosion and coatings
           </p>
         </Link>
+        <Link href="/lunch-area">
+          <p
+            className="text-white mt-4 bg-[#a85b31] hover:bg-[#c56c3c] text-center max-sm:mb-3 border border-white 
+        rounded-full px-4 py-2 w-full transition-all ease-in-out duration-200 cursor-pointer font-semibold capitalize"
+          >
+           Lunch Area 
+          </p>
+        </Link>
       </div>
     </main>
   );
